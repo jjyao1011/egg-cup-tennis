@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>第二屆蛋黃盃網球邀請賽</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎾</text></svg>">
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#1c2420;--mute:#6b756f;--line:#e3ded2;--acc:#c6e03a;--accink:#1c2420;--green:#1f6b45;--err:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101613;--card:#1a231e;--ink:#eef2ec;--mute:#93a099;--line:#2a362f;--green:#3fae78;--err:#ff7a6b}}
+:root[data-theme="dark"]{--bg:#101613;--card:#1a231e;--ink:#eef2ec;--mute:#93a099;--line:#2a362f;--green:#3fae78;--err:#ff7a6b}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;min-height:100vh}
+main{max-width:520px;margin:0 auto;padding:16px 14px 40px}
+h1{font-size:20px;margin:0 0 12px}
+h2{font-size:15px;margin:0 0 10px}
+.sub{color:var(--mute);font-size:13px;margin:0 0 10px;line-height:1.5}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:14px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.tabs button{padding:12px 8px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);font-size:15px;font-weight:700}
+.tabs button.on{background:var(--g);border-color:var(--g);color:#fff}
+.tabs i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--g);margin-right:6px}
+.tabs button.on i{background:#fff}
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;color:var(--mute);font-weight:500;padding-bottom:6px;text-align:center}
+td{padding:9px 0;border-top:1px solid var(--line);text-align:center;font-variant-numeric:tabular-nums;font-size:15px}
+td.l,th.l{text-align:left}
+.rk{font-weight:800;color:var(--g)}
+.fx{display:flex;align-items:center;gap:10px;padding:12px 4px;border-top:1px solid var(--line);cursor:pointer}
+.fx:first-of-type{border-top:0}
+.fx .no{width:26px;height:26px;border-radius:50%;background:var(--g);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.fx .vs{flex:1;font-size:15px;line-height:1.35}
+.fx .vs b{color:var(--green)}
+.tag{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--bg);color:var(--mute);white-space:nowrap}
+.tag.live{background:var(--acc);color:var(--accink);font-weight:700}
+.tag.done{background:var(--green);color:#fff}
+input[type=text],input[type=number]{width:100%;font-size:16px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.names{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:center}
+.names span{font-weight:800;color:var(--g);text-align:center}
+.badge{display:inline-block;font-size:12px;padding:3px 10px;border-radius:99px;background:var(--bg);color:var(--mute);margin:0 6px 10px 0}
+.badge.g{background:var(--g);color:#fff}
+.en td{padding:14px 0}
+.en td.nm{text-align:left;font-size:17px;font-weight:600;width:38%}
+.st{display:inline-flex;align-items:center;gap:12px}
+.st button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:22px;touch-action:manipulation}
+.st b{font-size:30px;min-width:28px;color:var(--green)}
+.en input{width:70px;text-align:center}
+.res{text-align:center;padding:14px 8px}
+.res b{font-size:22px}
+.res.err{color:var(--err)}
+.row{display:flex;gap:10px;margin-top:14px}
+.row button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:15px}
+.danger{color:var(--err)!important}
+.xt{overflow-x:auto}.xt table{min-width:480px}.xt th{font-size:12px!important;line-height:1.25}.xt th,.xt td{padding:9px 2px;font-size:14px}.xt td.l{text-align:left;font-weight:600;white-space:nowrap;padding-right:8px;position:sticky;left:0;background:var(--card)}.xt td{font-weight:600}.xt .w{color:var(--green);font-weight:800}.xt small{display:block;font-size:11px;color:var(--mute);font-weight:400}.xt .w small{color:var(--green)}.xt .x{color:var(--err);background:var(--bg)}.mode{float:right;font-size:13px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
