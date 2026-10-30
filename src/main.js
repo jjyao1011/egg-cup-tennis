@@ -65,10 +65,19 @@ function xtab(g) {
     });
     return h + '</table></div>'
 }
+function bind() {
+    document.getElementById('md').onclick = function () { if (edit) signOut(auth); else { showLogin = !showLogin; home() } };
+    var gl = document.getElementById('gl'); if (gl) {
+        gl.onclick = function () { signInWithPopup(auth, new GoogleAuthProvider()).catch(function (e) { alert('登入失敗：' + e.message) }) };
+        document.getElementById('ep').onclick = function () { signInWithEmailAndPassword(auth, document.getElementById('em').value.trim(), document.getElementById('pw').value).catch(function () { alert('登入失敗，請確認 Email 與密碼') }) }
+    }
+    each('.tabs button', function (b) { b.onclick = function () { gi = +b.dataset.t; home() } });
+}
 function home() {
-    var g = GR[gi], h = '<button class="mode" id="md">' + (edit ? '裁判 ✎ 登出' : '🔒 Google 登入') + '</button><h1>🎾 第二屆蛋黃盃網球邀請賽</h1><p class="sub">主辦人：EGG</p>' + loginCard() + '<div class="tabs">';
+    var g = GR[gi] || GR[0], h = '<button class="mode" id="md">' + (edit ? '裁判 ✎ 登出' : '🔒 Google 登入') + '</button><h1>🎾 第二屆蛋黃盃網球邀請賽</h1><p class="sub">主辦人：EGG</p>' + loginCard() + '<div class="tabs">';
     GR.forEach(function (x, i) { h += '<button data-t="' + i + '" style="--g:' + x.c + '" class="' + (i == gi ? 'on' : '') + '"><i></i>' + x.t + '</button>' });
-    h += '</div>';
+    h += '<button data-t="4" style="--g:#b8860b;grid-column:span 2" class="' + (gi == 4 ? 'on' : '') + '"><i></i>🏆 決賽</button></div>';
+    if (gi == 4) { h += fin(); $(h); bind(); if (edit) each('.fx[data-f]', function (b) { b.onclick = function () { var q = b.dataset.f.split('-'); openF(+q[0], +q[1]) } }); return }
     h += '<div class="card" style="--g:' + g.c + '"><h2>' + g.t + ' 戰績表</h2><p class="sub">橫列選手的局數在前，例如 4:2 代表橫列選手贏 4 局。</p>' + xtab(g) + '</div>';
     if (edit) h += '<div class="card" style="--g:' + g.c + '"><h2>選手姓名</h2><div class="names">' + D.names[g.k].map(function (n, i) { return '<span>' + L[i] + '</span><input type="text" data-n="' + i + '" value="' + n + '">' }).join('') + '</div></div>';
     h += '<div class="card" style="--g:' + g.c + '"><h2>賽程' + (edit ? '（點選場次輸入比分）' : '') + '</h2>';
@@ -79,37 +88,70 @@ function home() {
     h += '</div>';
     if (edit) h += '<div class="row"><button class="danger" id="rs">清除全部比分</button></div>';
     $(h);
-    document.getElementById('md').onclick = function () { if (edit) signOut(auth); else { showLogin = !showLogin; home() } };
-    var gl = document.getElementById('gl'); if (gl) {
-        gl.onclick = function () { signInWithPopup(auth, new GoogleAuthProvider()).catch(function (e) { alert('登入失敗：' + e.message) }) };
-        document.getElementById('ep').onclick = function () { signInWithEmailAndPassword(auth, document.getElementById('em').value.trim(), document.getElementById('pw').value).catch(function () { alert('登入失敗，請確認 Email 與密碼') }) }
-    }
-    each('.tabs button', function (b) { b.onclick = function () { gi = +b.dataset.t; home() } });
+    bind();
     if (edit) {
-        each('.fx', function (b) { b.onclick = function () { mi = +b.dataset.m; match() } });
+        each('.fx', function (b) { b.onclick = function () { openG(+b.dataset.m) } });
         each('input[data-n]', function (b) { b.oninput = function () { D.names[g.k][+b.dataset.n] = b.value || '?'; save() }; b.onchange = home });
         document.getElementById('rs').onclick = function () { if (confirm('確定清除所有比分？選手姓名會保留。')) { D.m = {}; save(); home() } }
     }
 }
+var cm = null;
+function openG(i) { mi = i; var g = GR[gi], o = ORDER[i]; cm = { k: g.k + '-' + i, n: [nm(g, o[0]), nm(g, o[1])], badge: g.t + ' · 第 ' + (i + 1) + ' 場', c: g.c, back: home, next: i < 9 ? function () { openG(i + 1) } : null }; match() }
+function openF(gen, t) { var d = finData(gen); if (!d.ok) return; var m = finM(d, t); cm = { k: m.k, n: m.n, badge: m.tl, c: '#b8860b', hi: m.hi, lo: m.lo, back: function () { gi = 4; home() }, next: null }; match() }
+function cnt(g) { return ORDER.filter(function (o, k) { return ev(D.m[g.k + '-' + k]).s == 2 }).length }
+function tied(x, y) { return !!(x && y && x.w == y.w && (x.gf - x.ga) == (y.gf - y.ga) && x.gf == y.gf) }
+/* 決賽：gen 0=男子(Red/Brown) 1=女子(Pink/Aqua)；冠軍賽=兩組第1名；亞軍賽=兩組第2名；季軍=其餘6人(各組第3~5名)排名第1 */
+function finData(gen) {
+    var A = GR[gen * 2], B = GR[gen * 2 + 1], sa = stand(A), sb = stand(B), na = cnt(A), nb = cnt(B), six = [];
+    [[A, sa], [B, sb]].forEach(function (p) { p[1].slice(2).forEach(function (r) { six.push({ g: p[0], r: r, name: D.names[p[0].k][r.i] }) }) });
+    six.sort(function (x, y) { return y.r.w - x.r.w || (y.r.gf - y.r.ga) - (x.r.gf - x.r.ga) || y.r.gf - x.r.gf });
+    return { gen: gen, A: A, B: B, sa: sa, sb: sb, na: na, nb: nb, ok: na == 10 && nb == 10, six: six }
+}
+function finM(d, t) {
+    var r = t - 1, A = d.A, B = d.B, pa = d.ok ? d.sa[r] : null, pb = d.ok ? d.sb[r] : null, nA = A.t.split(' ')[1], nB = B.t.split(' ')[1];
+    var w = d.ok && (tied(d.sa[r], d.sa[r + 1]) || (r && tied(d.sa[r], d.sa[r - 1])) || tied(d.sb[r], d.sb[r + 1]) || (r && tied(d.sb[r], d.sb[r - 1])));
+    return { k: 'fin-' + d.gen + '-' + t, n: [pa ? D.names[A.k][pa.i] : nA + ' 第' + t + '名', pb ? D.names[B.k][pb.i] : nB + ' 第' + t + '名'], tl: (d.gen ? '女子' : '男子') + ' · ' + (t == 1 ? '冠軍賽' : '亞軍賽'), hi: t == 1 ? '冠軍' : '亞軍', lo: t == 1 ? '差點冠軍' : '差點亞軍', warn: !!w }
+}
+function fin() {
+    var h = '';
+    [0, 1].forEach(function (gen) {
+        var d = finData(gen), nA = d.A.t.split(' ')[1], nB = d.B.t.split(' ')[1];
+        h += '<div class="card" style="--g:#b8860b"><h2>🏆 ' + (gen ? '女子組' : '男子組') + '決賽</h2>';
+        if (!d.ok) h += '<p class="sub">預賽全部結束後才會產生對戰（' + nA + ' ' + d.na + '/10、' + nB + ' ' + d.nb + '/10）。冠軍賽為兩組第 1 名對戰，亞軍賽為兩組第 2 名對戰。</p>';
+        [1, 2].forEach(function (t) {
+            var m = finM(d, t), e = ev(D.m[m.k]), w = e.s == 2 ? e.w : -1;
+            h += '<div class="fx" data-f="' + gen + '-' + t + '" style="cursor:' + (edit && d.ok ? 'pointer' : 'default') + '"><div class="no">' + (t == 1 ? '冠' : '亞') + '</div><div class="vs"><small style="color:var(--mute)">' + m.tl + '</small><br>' + (w == 0 ? '<b>' + m.n[0] + '</b>' : m.n[0]) + ' <span style="color:var(--mute)">vs</span> ' + (w == 1 ? '<b>' + m.n[1] + '</b>' : m.n[1]) + '</div><span class="tag ' + (e.s == 2 ? 'done' : e.s == 1 ? 'live' : '') + '">' + (e.s == 2 ? txt(e) : e.s == 1 ? (e.err ? '待修正' : D.m[m.k].a + '-' + D.m[m.k].b) : '待賽') + '</span></div>';
+            if (w >= 0) h += '<p class="medal">' + (t == 1 ? '🥇' : '🥈') + ' ' + m.hi + '：<b>' + m.n[w] + '</b>　' + m.lo + '：' + m.n[1 - w] + '</p>';
+            if (m.warn) h += '<p class="sub">⚠ 預賽成績同分，名次請主辦人確認。</p>'
+        });
+        h += '<h2 style="margin-top:14px">季軍（其餘 6 人排名）</h2>';
+        if (!d.ok) h += '<p class="sub">待預賽結束</p>';
+        else h += '<p class="medal">🥉 季軍：<b>' + d.six[0].name + '</b></p>' + (tied(d.six[0].r, d.six[1].r) ? '<p class="sub">⚠ 第 1 名同分，請主辦人確認。</p>' : '') +
+            '<table><tr><th>#</th><th class="l">選手</th><th>組別</th><th>勝–敗</th><th>局差</th></tr>' +
+            d.six.map(function (p, i) { var df = p.r.gf - p.r.ga; return '<tr><td class="rk">' + (i + 1) + '</td><td class="l">' + p.name + '</td><td>' + p.g.t.split(' ')[1] + '</td><td>' + p.r.w + '–' + p.r.l + '</td><td>' + (df > 0 ? '+' : '') + df + '</td></tr>' }).join('') + '</table>';
+        h += '</div>'
+    });
+    return h
+}
 function match() {
-    var g = GR[gi], o = ORDER[mi], k = key(), m = D.m[k] || { a: 0, b: 0, ta: '', tb: '' }, e = ev(D.m[k]), n = [nm(g, o[0]), nm(g, o[1])], v = [m.a, m.b], t = [m.ta, m.tb];
+    var k = cm.k, m = D.m[k] || { a: 0, b: 0, ta: '', tb: '' }, e = ev(D.m[k]), n = cm.n, v = [m.a, m.b], t = [m.ta, m.tb];
     var showTb = (v[0] == 4 && v[1] == 4) || (v[0] + v[1] == 9 && (v[0] == 5 || v[1] == 5));
-    var h = '<div style="--g:' + g.c + '"><span class="badge g">' + g.t + ' · 第 ' + (mi + 1) + ' 場</span><div class="card"><table class="en"><tr><th class="l">選手</th><th>局數</th>' + (showTb ? '<th>搶七分</th>' : '') + '</tr>';
+    var h = '<div style="--g:' + cm.c + '"><span class="badge g">' + cm.badge + '</span><div class="card"><table class="en"><tr><th class="l">選手</th><th>局數</th>' + (showTb ? '<th>搶七分</th>' : '') + '</tr>';
     for (var p = 0; p < 2; p++)h += '<tr><td class="nm">' + n[p] + '</td><td><div class="st"><button data-p="' + p + '" data-d="-1">−</button><b>' + v[p] + '</b><button data-p="' + p + '" data-d="1">+</button></div></td>' + (showTb ? '<td><input type="number" inputmode="numeric" min="0" data-tb="' + p + '" value="' + t[p] + '"></td>' : '') + '</tr>';
     h += '</table></div><div class="card res ' + (e.err ? 'err' : '') + '">';
     if (e.err) h += e.err;
-    else if (e.s == 2) h += '🏆 <b>' + n[e.w] + ' 獲勝</b><p class="sub">最終比分 ' + txt(e) + '</p>';
+    else if (e.s == 2) h += '🏆 <b>' + n[e.w] + ' 獲勝</b><p class="sub">最終比分 ' + txt(e) + '</p>' + (cm.hi ? '<p class="sub">' + cm.hi + '：' + n[e.w] + '　' + cm.lo + '：' + n[1 - e.w] + '</p>' : '');
     else if (e.note) h += '<b>' + e.note + '</b><p class="sub">請在上方填入搶七分數</p>';
     else h += '<span class="sub">輸入雙方局數，比賽結束時會自動判定勝負</span>';
     h += '</div><p class="sub">規則：先拿 4 局且領先 2 局獲勝（4:0、4:1、4:2）；3:3 需贏到 5:3；4:4 打搶七（先 7 分且領先 2 分），勝者 5:4。</p>' +
-        '<div class="row"><button id="bk">← 賽程</button><button id="cl" class="danger">清除此場</button>' + (e.s == 2 && mi < 9 ? '<button id="nx">下一場 →</button>' : '') + '</div></div>';
+        '<div class="row"><button id="bk">← 返回</button><button id="cl" class="danger">清除此場</button>' + (e.s == 2 && cm.next ? '<button id="nx">下一場 →</button>' : '') + '</div></div>';
     $(h);
     function get() { return D.m[k] || (D.m[k] = { a: 0, b: 0, ta: '', tb: '' }) }
     each('.st button', function (b) { b.onclick = function () { var x = get(), f = +b.dataset.p ? 'b' : 'a'; x[f] = Math.max(0, Math.min(5, x[f] + +b.dataset.d)); save(); match() } });
     each('input[data-tb]', function (b) { b.onchange = function () { var x = get(); x[+b.dataset.tb ? 'tb' : 'ta'] = b.value; save(); match() } });
-    document.getElementById('bk').onclick = home;
+    document.getElementById('bk').onclick = cm.back;
     document.getElementById('cl').onclick = function () { delete D.m[k]; save(); match() };
-    var nx = document.getElementById('nx'); if (nx) nx.onclick = function () { mi++; match() }
+    var nx = document.getElementById('nx'); if (nx) nx.onclick = cm.next
 }
 var REF = doc(db, 'tournament', 'main'), ready = false;
 fill(); home();
